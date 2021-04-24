@@ -33,4 +33,4 @@ lib/giphy.js
 lib/*.json
 lib/instaStory.js
 lib/jiwa.js
-utils/anu.js
+utils/stat.json
