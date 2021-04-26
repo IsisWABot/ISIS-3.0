@@ -7,6 +7,7 @@ const axios = require('axios')
 const request = require('request');
 const fetch = require('node-fetch')
 const moment = require('moment-timezone')
+const CepCoords = require("coordenadas-do-cep");
 const canvas = require('canvacord')
 const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
@@ -47,7 +48,9 @@ let antilink = JSON.parse(fs.readFileSync('C:/BOTS/ISIS-3.0/handler/message/text
 const ownerNumber = '5517991766836@c.us';
 const groupLimit = 10;
 
-const sleep = async (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) }
+const sleep = async (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 module.exports = msgHandler = async (client, message) => {
     try {
@@ -524,8 +527,14 @@ module.exports = msgHandler = async (client, message) => {
             case 'fb':
                 if (args.length !== 1) return client.reply(from, '[🤦🏽‍♀️] Hey, você utilizou esse comando de forma errada. \nTente Utilizar: *#facebook link_do_video*', id)
                 if (!is.Url(url) && !url.includes('facebook.com') || url.includes('fb.watch')) return client.reply(from, '[🤷🏽‍♀️] Parece que este Link não é do Facebook!', id)
-                await client.reply(from, `[👩🏽‍💻] COMANDO EM MANUTENÇÃO!`, id)
-                break
+                await client.reply(from, `[👩🏽‍💻] Paraê... Eu preciso pensar um pouco para fazer isso... \nPode levar até 5min para o envio!`, id)
+                try {
+                        const fb = await axios.get(`https://mnazria.herokuapp.com/api/fbdownloadervideo?url=${encodeURIComponent(url)}`)
+                        await client.sendFileFromUrl(from, `${fb.data.resultSD}`, 'video.mp4', '', id)
+                    } catch (error) {
+                        await client.reply(from, '[🤷🏽‍♀️] Vish... Deu tudo errado. Tente novamente mais tarde!', id)
+                    }
+                    break
                 //
                 //Outros
                 //
@@ -567,16 +576,14 @@ module.exports = msgHandler = async (client, message) => {
                 break
                 //
             case 'cep':
-                if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️]Utilize: ${prefix}cep cep \nObs: Não coloque o simbolo "-"`, id)
+                if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️]Utilize: ${prefix}cep 12345789 \nObs: Não coloque o simbolo "-"`, id)
                 const CEPBody = body.slice(5)
                 const response4 = await axios.get('https://cep.awesomeapi.com.br/json/' + CEPBody + '/')
                 const {
-                    cep, address, district, state, city
+                    cep, address, district, state, city, lat, lng, city_ibge, ddd
                 } = response4.data
-                await client.sendText(from, '*BUSCA de CEP: ' + cep + '*\n\n' + address + ', ' + district + '\n' + city + ' - ' + state + '\n\n')
-                    .catch(() => {
-                        client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro', id)
-                    })
+                await client.sendText(from, `*[Dados do CEP]*\n\n *CEP:* ${cep}\n *Logradouro:* ${address}\n *Bairro:* ${district}\n *Estado:* ${state} \n *Cidade:* ${city}\n *Cód IBGE:* ${city_ibge}\n *DDD:* ${ddd}\n`)
+                await client.sendLocation(from, `${lat}`, `${lng}`, `${address}`)
                 break
                 //
             case 'rastrear':
@@ -627,23 +634,17 @@ module.exports = msgHandler = async (client, message) => {
                         })
                 } else return client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro! Esse comando só aceita envio de imagens!', id)
                 break
-            case 'meme':
-                if ((isMedia || isQuotedImage) && args.length >= 2) {
-                    const top = arg.split('|')[0]
-                    const bottom = arg.split('|')[1]
-                    const encryptMedia = isQuotedImage ? quotedMsg : message
-                    const mediaData = await decryptMedia(encryptMedia, uaOverride)
-                    const getUrl = await uploadImages(mediaData, false)
-                    const ImageBase64 = await meme.custom(getUrl, top, bottom)
-                    client.sendImage(from, ImageBase64, 'image.png', 'Seu meme está pronto', null, true, false, false)
-                        .then(() => {})
-                        .catch(() => {
-                            client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro!')
-                        })
-                } else {
-                    await client.reply(from, `[🤷🏽‍♀️] Envie uma Imagem com a legenda: #meme texto-superior | texto-inferior. \n_OBS: COLOQUE ESPAÇO ENTRE A BARRA E O TEXTO!_`, id)
-                }
-                break
+                case 'meme':
+                    if (isMedia && type === 'image' && args.length >= 2 && q.includes('|') || isQuotedImage && args.length >= 2 && q.includes('|')) {
+                        const top = arg.split('|')[0]
+                        const bottom = arg.split('|')[1]
+                        const memeData = isQuotedImage ? quotedMsg : message
+                        const memeupm = await decryptMedia(memeData, uaOverride)
+                        const memeUpl = await uploadImages(memeupm, false)
+                        await client.sendFileFromUrl(from, `https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${memeUpl}`, 'image.png', '', id)
+                        .catch(() => { kill.reply(from, '[🙍🏽‍♀️] Ocorreu um erro!', id) })
+                    } else return kill.reply(from, `Isso deve ser usado digitando o comando e em seguida os argumentos, separando eles pelo |, exemplo, ${prefix}meme parte 1 | parte 2 | parte 3 e assim vai, nesse comando `, id)
+                    break
                 //
             case 'criador':
                 await client.sendContact(from, '5517991766836@c.us')
@@ -712,27 +713,44 @@ module.exports = msgHandler = async (client, message) => {
                         client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro!', id)
                     })
                 break
-                case 'ip':
-                    if (args.length !== 1) return client.reply(from, '[🤷🏽‍♀️] Informe um IPV4 (ex: #ip 8.8.8.8).', id)
-                    const ip = await axios.get(`http://ipwhois.app/json/${encodeURIComponent(body.slice(4))}`)
-                    if (ip.data.latitude == undefined) return client.reply(from, '[🙍🏽‍♀️] Nenhum informação localizada.', id)
-                    await client.reply(from,  `*[Dados do IP]*\n *IP:* ${ip.data.ip}\n *Tipo:* ${ip.data.type}\n *Região:* ${ip.data.region}\n *Cidade:* ${ip.data.city}\n *Latitude:* ${ip.data.latitude}\n *Longitude:* ${ip.data.longitude}\n *Provedor:* ${ip.data.isp}\n *Continente:* ${ip.data.continent}\n *Sigla do continente:* ${ip.data.continent_code}\n *País:* ${ip.data.country}\n *Sigla do País:* ${ip.data.country_code}\n *Capital do País:* ${ip.data.country_capital}\n *DDI:* ${ip.data.country_phone}\n *Países Vizinhos:* ${ip.data.country_neighbours}\n *Fuso Horário:* ${ip.data.timezone} ${ip.data.timezone_name} ${ip.data.timezone_gmt}\n *Moeda:* ${ip.data.currency}\n *Sigla da Moeda:* ${ip.data.currency_code}\n`, id)
-                    await client.reply(from, 'Buscando o local no Google Maps. \nAguarde +/- 5seg...', id)
-                    const browserip = await puppeteer.launch({ 
-                        headless: true,
-                        defaultViewport: null,
-                        args: ['--start-maximized'] 
+            case 'ip':
+                if (args.length !== 1) return client.reply(from, '[🤷🏽‍♀️] Informe um IPV4 (ex: #ip 8.8.8.8).', id)
+                const ip = await axios.get(`http://ipwhois.app/json/${encodeURIComponent(body.slice(4))}`)
+                if (ip.data.latitude == undefined) return client.reply(from, '[🙍🏽‍♀️] Nenhum informação localizada.', id)
+                await client.reply(from, `*[Dados do IP]*\n *IP:* ${ip.data.ip}\n *Tipo:* ${ip.data.type}\n *Região:* ${ip.data.region}\n *Cidade:* ${ip.data.city}\n *Latitude:* ${ip.data.latitude}\n *Longitude:* ${ip.data.longitude}\n *Provedor:* ${ip.data.isp}\n *Continente:* ${ip.data.continent}\n *Sigla do continente:* ${ip.data.continent_code}\n *País:* ${ip.data.country}\n *Sigla do País:* ${ip.data.country_code}\n *Capital do País:* ${ip.data.country_capital}\n *DDI:* ${ip.data.country_phone}\n *Países Vizinhos:* ${ip.data.country_neighbours}\n *Fuso Horário:* ${ip.data.timezone} ${ip.data.timezone_name} ${ip.data.timezone_gmt}\n *Moeda:* ${ip.data.currency}\n *Sigla da Moeda:* ${ip.data.currency_code}\n`, id)
+                await client.reply(from, 'Buscando o local no Google Maps. \nAguarde +/- 5seg...', id)
+                const browserip = await puppeteer.launch({
+                    headless: true,
+                    defaultViewport: null,
+                    args: ['--start-maximized']
+                })
+                const pageip = await browserip.newPage()
+                await pageip.goto(`http://www.google.com/maps?layer=c&cbll=${ip.data.latitude},${ip.data.longitude}`, {
+                    waitUntil: "networkidle2"
+                }).then(async () => {
+                    await sleep(5000)
+                    await client.sendLocation(from, `${ip.data.latitude}`, `${ip.data.longitude}`, '')
+                    await pageip.screenshot({
+                        path: `./media/img/${user.replace('@c.us', '')}ip.png`
                     })
-                    const pageip = await browserip.newPage()
-                    await pageip.goto(`http://www.google.com/maps?layer=c&cbll=${ip.data.latitude},${ip.data.longitude}`, { waitUntil: "networkidle2" }).then(async () => {
-                        await sleep(5000)
-                        await client.sendLocation(from, `${ip.data.latitude}`, `${ip.data.longitude}`, '')
-                        await pageip.screenshot({path: `./media/img/${user.replace('@c.us', '')}ip.png`})
-                        browserip.close()
-                    })
-                    await client.sendFile(from, `./media/img/${user.replace('@c.us', '')}ip.png`, 'ip.png', `Talvez seja aqui! 📍\n *Google Maps:* http://www.google.com/maps/place/${ip.data.latitude},${ip.data.longitude}`, id)
-                    fs.unlinkSync(`./media/img/${user.replace('@c.us', '')}ip.png`)
-                    break
+                    browserip.close()
+                })
+                await client.sendFile(from, `./media/img/${user.replace('@c.us', '')}ip.png`, 'ip.png', `Talvez seja aqui! 📍\n *Google Maps:* http://www.google.com/maps/place/${ip.data.latitude},${ip.data.longitude}`, id)
+                fs.unlinkSync(`./media/img/${user.replace('@c.us', '')}ip.png`)
+                break
+                // Por Tio das Trevas, updates KillovSky
+            case 'decode':
+                if (args.length == 0) return client.reply(from, '[🤷🏽‍♀️] Envie um código binário para decodar', id)
+                const dbin = await axios.get(`https://some-random-api.ml/binary?decode=${encodeURIComponent(body.slice(8))}`)
+                await client.reply(from, `*🤖1️⃣  =*\n\n${body.slice(8)}\n\n *= 📓✏️*\n\n${dbin.data.text}`, id)
+                break
+
+                // Por Tio das Trevas, updates KillovSky
+            case 'encode':
+                if (args.length == 0) return kill.reply(from, '[🤷🏽‍♀️] Envie um texto para encodar', id)
+                const cbin = await axios.get(`https://some-random-api.ml/binary?text=${encodeURIComponent(body.slice(8))}`)
+                await client.reply(from, `*📓✏️ → *\n\n${body.slice(8)}\n\n*🤖1️⃣  → *\n\n${cbin.data.binary}`, id)
+                break
             case 'say':
                 if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️] Utilize:\n${prefix}say [mensagem]`)
                 if (!isGroupMsg) return client.reply(from, '[🤷🏽‍♀️] *Atenção!* \n\nEsse comando só funciona em Grupos.', id)
@@ -740,17 +758,18 @@ module.exports = msgHandler = async (client, message) => {
                 await client.sendText(from, sayText)
                 break
                 //
-            case 'txtimg':
-            case 'texto':
-            case 'img':
-                if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️] Eu vou escrever o que você digitar no meu caderno!\nUtilize: ${prefix}txtimg texto\n\nExemplo: ${prefix}txtimg Sou o melhor BOT!`, id)
-                const nulisq = body.slice(7)
-                const nulisp = await rugaapi.tulis(nulisq)
-                await client.sendImage(from, `${nulisp}`, '', '[👩🏽] Aqui está seu Texto!', id)
-                    .catch(() => {
-                        client.reply(from, '[🙍🏽‍♀️] Ocorreu um Erro!', id)
-                    })
-                break
+                case 'github':
+                    if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️] Utilize:\n${prefix}github [user]`, id)
+                    await client.reply(from,  `[👩🏽‍💻] Paraê... Eu preciso pensar um pouco para fazer isso...`, id)
+                    const gitData = await axios.get(`https://api.github.com/users/${args[0]}`)
+                    const siteAdmin = (gitData.data.site_admin == false) ? 'Não' : gitData.data.site_admin
+                    const companY = (gitData.data.company == null) ? 'Não' : gitData.data.company
+                    const bloG = (gitData.data.blog == "") ? 'Não' : gitData.data.blog
+                    const emaiL = (gitData.data.email == null) ? 'Não' : gitData.data.email
+                    const tramPar = (gitData.data.hireable == null) ? 'Não' : gitData.data.hireable
+                    if (gitData.data.message == 'Not Found') return client.reply(from, '[🙍🏽‍♀️] Ocorreu um Erro!', id)
+                    await client.sendFileFromUrl(from, `${gitData.data.avatar_url}`, 'avatar.png', `*[CONSULTA GITHUB]*\n\n *Username:* ${gitData.data.name}\n *ID:* ${gitData.data.id}\n *Node_ID:* ${gitData.data.node_id}\n *URL:* ${gitData.data.html_url}\n *Local:* ${gitData.data.location}\n *Bio:* ${gitData.data.bio}\n *Twitter:* ${gitData.data.twitter_username}\n *Seguidores:* ${gitData.data.followers}\n *Seguindo:* ${gitData.data.following}\n *Criado as:* ${gitData.data.created_at}\n *Update:* ${gitData.data.updated_at}\n *Procura trabalho:* ${tramPar}\n *Site:* ${bloG}\n *Repositorios:* ${gitData.data.public_repos}\n *Admin de Site:* ${siteAdmin}\n *Tipo:* ${gitData.data.type}\n *Empresa:* ${companY}\n *Email:* ${emaiL}`, id)
+                    break
                 //
             case 'traduzir':
             case 'translate':
@@ -953,7 +972,7 @@ module.exports = msgHandler = async (client, message) => {
                     await client.reply(from, `Ocorreu um erro ao usar esse comando!`, id)
                 }
                 break
-            //
+                //
             case 'spank':
             case 'bater':
                 if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
@@ -1011,62 +1030,62 @@ module.exports = msgHandler = async (client, message) => {
                 }
                 break
                 //
-                case 'slap':
-                case 'tapa':
-                        if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
-                        try {
-                            if (isMedia && type === 'image' && mentionedJidList.length == 0) {
-                                const ppRaw = await client.getProfilePicFromServer(sender.id)
-                                const ppSecond = await decryptMedia(message, uaOverride)
-                                if (ppRaw === undefined) {
-                                    var ppFirst = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
-                                } else {
-                                    var ppFirst = ppRaw
-                                }
-                                canvas.Canvas.slap(ppFirst, ppSecond)
-                                    .then(async (buffer) => {
-                                        canvas.write(buffer, `${sender.id}_slap.png`)
-                                        await client.sendFile(from, `${sender.id}_slap.png`, `${sender.id}_slap.png`, '', id)
-                                        fs.unlinkSync(`${sender.id}_slap.png`)
-                                    })
-                            } else if (quotedMsg && mentionedJidList.length == 0) {
-                                const ppRaw = await client.getProfilePicFromServer(sender.id)
-                                const ppSecond = await decryptMedia(quotedMsg, uaOverride)
-                                if (ppRaw === undefined) {
-                                    var ppFirst = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
-                                } else {
-                                    var ppFirst = ppRaw
-                                }
-                                canvas.Canvas.slap(ppFirst, ppSecond)
-                                    .then(async (buffer) => {
-                                        canvas.write(buffer, `${sender.id}_slap.png`)
-                                        await client.sendFile(from, `${sender.id}_slap.png`, `${sender.id}_slap.png`, '', id)
-                                        fs.unlinkSync(`${sender.id}_slap.png`)
-                                    })
-                            } else if (mentionedJidList.length !== 0) {
-                                const ppRaw = await client.getProfilePicFromServer(sender.id)
-                                const ppSecond = await client.getProfilePicFromServer(mentionedJidList[0])
-                                if (ppRaw === undefined) {
-                                    var ppFirst = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
-                                } else {
-                                    var ppFirst = ppRaw
-                                }
-                                if (ppSecond === undefined) {
-                                    var pp2nd = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
-                                } else {
-                                    var pp2nd = ppSecond
-                                }
-                                canvas.Canvas.slap(ppFirst, pp2nd)
-                                    .then(async (buffer) => {
-                                        canvas.write(buffer, `${sender.id}_slap.png`)
-                                        await client.sendFile(from, `${sender.id}_slap.png`, `${sender.id}_slap.png`, '', id)
-                                        fs.unlinkSync(`${sender.id}_slap.png`)
-                                    })
-                            }
-                        } catch (err) {
-                            await client.reply(from, `Ocorreu um erro ao usar esse comando!`, id)
+            case 'slap':
+            case 'tapa':
+                if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
+                try {
+                    if (isMedia && type === 'image' && mentionedJidList.length == 0) {
+                        const ppRaw = await client.getProfilePicFromServer(sender.id)
+                        const ppSecond = await decryptMedia(message, uaOverride)
+                        if (ppRaw === undefined) {
+                            var ppFirst = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
+                        } else {
+                            var ppFirst = ppRaw
                         }
-                        break
+                        canvas.Canvas.slap(ppFirst, ppSecond)
+                            .then(async (buffer) => {
+                                canvas.write(buffer, `${sender.id}_slap.png`)
+                                await client.sendFile(from, `${sender.id}_slap.png`, `${sender.id}_slap.png`, '', id)
+                                fs.unlinkSync(`${sender.id}_slap.png`)
+                            })
+                    } else if (quotedMsg && mentionedJidList.length == 0) {
+                        const ppRaw = await client.getProfilePicFromServer(sender.id)
+                        const ppSecond = await decryptMedia(quotedMsg, uaOverride)
+                        if (ppRaw === undefined) {
+                            var ppFirst = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
+                        } else {
+                            var ppFirst = ppRaw
+                        }
+                        canvas.Canvas.slap(ppFirst, ppSecond)
+                            .then(async (buffer) => {
+                                canvas.write(buffer, `${sender.id}_slap.png`)
+                                await client.sendFile(from, `${sender.id}_slap.png`, `${sender.id}_slap.png`, '', id)
+                                fs.unlinkSync(`${sender.id}_slap.png`)
+                            })
+                    } else if (mentionedJidList.length !== 0) {
+                        const ppRaw = await client.getProfilePicFromServer(sender.id)
+                        const ppSecond = await client.getProfilePicFromServer(mentionedJidList[0])
+                        if (ppRaw === undefined) {
+                            var ppFirst = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
+                        } else {
+                            var ppFirst = ppRaw
+                        }
+                        if (ppSecond === undefined) {
+                            var pp2nd = 'https://telegra.ph/file/18da304b647f38c315abb.jpg'
+                        } else {
+                            var pp2nd = ppSecond
+                        }
+                        canvas.Canvas.slap(ppFirst, pp2nd)
+                            .then(async (buffer) => {
+                                canvas.write(buffer, `${sender.id}_slap.png`)
+                                await client.sendFile(from, `${sender.id}_slap.png`, `${sender.id}_slap.png`, '', id)
+                                fs.unlinkSync(`${sender.id}_slap.png`)
+                            })
+                    }
+                } catch (err) {
+                    await client.reply(from, `Ocorreu um erro ao usar esse comando!`, id)
+                }
+                break
             case 'jail':
                 if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
                 const ppPicture = await client.getProfilePicFromServer(mentionedJidList[0])
@@ -1081,7 +1100,7 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFile(from, `${sender.id}_jail.png`, `${sender.id}_jail.png`, '', id)
                         fs.unlinkSync(`${sender.id}_jail.png`)
                     })
-            break
+                break
             case 'rip':
                 if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
                 const ppPicture2 = await client.getProfilePicFromServer(mentionedJidList[0])
@@ -1096,7 +1115,7 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFile(from, `${sender.id}_rip.png`, `${sender.id}_rip.png`, '', id)
                         fs.unlinkSync(`${sender.id}_rip.png`)
                     })
-            break
+                break
             case 'facepalm':
                 if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
                 const ppPicture5 = await client.getProfilePicFromServer(mentionedJidList[0])
@@ -1111,7 +1130,7 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFile(from, `${sender.id}_facepalm.png`, `${sender.id}_facepalm.png`, '', id)
                         fs.unlinkSync(`${sender.id}_facepalm.png`)
                     })
-            break
+                break
             case 'beautiful':
                 if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
                 const ppPicture4 = await client.getProfilePicFromServer(mentionedJidList[0])
@@ -1126,7 +1145,7 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFile(from, `${sender.id}_beautiful.png`, `${sender.id}_beautiful.png`, '', id)
                         fs.unlinkSync(`${sender.id}_beautiful.png`)
                     })
-            break
+                break
             case 'wanted':
                 if (!isGroupMsg) return client.reply(from, "Comando somente para ser usado em grupos!")
                 const ppPicture3 = await client.getProfilePicFromServer(mentionedJidList[0])
@@ -1141,7 +1160,7 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFile(from, `${sender.id}_wanted.png`, `${sender.id}_wanted.png`, '', id)
                         fs.unlinkSync(`${sender.id}_wanted.png`)
                     })
-            break
+                break
             case 'texto3d':
                 if (args.length == 0) return client.reply(from, `Crie um texto 3D: #texto3d texto`, id)
                 await client.reply(from, `Aguarde um momento...`, id)
@@ -1157,7 +1176,7 @@ module.exports = msgHandler = async (client, message) => {
             case 'stalkig':
             case 'stalkear':
                 if (args.length == 0) return client.reply(from, 'Você precisa informar o nome do usuário que quer procurar!', id)
-                const ig = await axios.get(`https://docs-jojo.herokuapp.com/api/stalk?username=${body.slice(9)}`)
+                const ig = await axios.get(`https://docs-jojo.herokuapp.com/api/stalk?username=${q}`)
                 const stkig = JSON.stringify(ig.data)
                 if (stkig == '{}') return client.reply(from, '💔️ - Sinto muito, não encontrei resultados para o comando...', id)
                 await client.sendFileFromUrl(from, `${stkig.graphql.user.profile_pic_url}`, ``, `Username: *${stkig.graphql.user.username}*\n\nBiografia: ${stkig.graphql.user.biography}\nSeguidores: ${stkig.graphql.user.edge_followed_by.count}\nSeguindo: ${stkig.graphql.user.edge_follow.count}\nVerificada: ${stkig.graphql.user.is_verified}`, id)
@@ -1180,6 +1199,43 @@ module.exports = msgHandler = async (client, message) => {
                     })
                 break
                 //Grupos
+                case 'capagrupo':
+                    if (!isGroupMsg) return client.reply(from, 'Esse comando foi feito para funcionar apenas em Grupos!', id)
+                    if (!isGroupAdmins) return client.reply(from, 'Esse comando só pode ser usado por Admins do Grupo.', id)
+                    if (!isBotGroupAdmins) return client.reply(from, 'Você precisa tornar o BOT um Admin do Grupo', id)
+                    if (isMedia && type == 'image' || isQuotedImage) {
+                        const dataMedia = isQuotedImage ? quotedMsg : message
+                        const mediaData = await decryptMedia(dataMedia, uaOverride)
+                        const picgp = await kill.getProfilePicFromServer(groupId)
+                        if (picgp == undefined) { var backup = errorurl } else { var backup = picgp }
+                        await client.sendFileFromUrl(from, backup, 'group.png', 'Backup', id)
+                        await client.setGroupIcon(groupId, `data:${mimetype};base64,${mediaData.toString('base64')}`)
+                    } else if (args.length == 1) {
+                        if (!is.Url(url)) { await client.reply(from, 'Envie um link para setar como capa do grupo!', id) }
+                        const picgpo = await client.getProfilePicFromServer(groupId)
+                        if (picgpo == undefined) { var back = errorurl } else { var back = picgpo }
+                        await client.sendFileFromUrl(from, back, 'group.png', 'Backup', id)
+                        await client.setGroupIconByUrl(groupId, url).then((r) => (!r && r !== undefined)
+                        ? client.reply(from, 'Falha ao setar pois o que você enviou não é um link!', id) : client.reply(from, 'Capa definida com sucesso!', id))
+                    } else return client.reply(from, 'Apenas imagens são aceitas para capa do grupo!', id)
+                    break
+                case 'revogar':
+                    if (!isGroupMsg) return client.reply(from, 'Esse comando foi feito para funcionar apenas em Grupos!', id)
+                    if (!isGroupAdmins) return client.reply(from, 'Esse comando só pode ser usado por Admins do Grupo.', id)
+                    if (!isBotGroupAdmins) return client.reply(from, 'Você precisa tornar o BOT um Admin do Grupo', id)
+                    await client.revokeGroupInviteLink(groupId).then(() => client.reply(from, '\n*ATENÇÃO!* O link do grupo foi revogado pela ISIS.\n', id))
+                    break
+                case 'mutar':
+                    if (!isGroupMsg) return client.reply(from, 'Esse comando foi feito para funcionar apenas em Grupos!', id)
+                    if (!isGroupAdmins) return client.reply(from, 'Esse comando só pode ser usado por Admins do Grupo.', id)
+                    if (!isBotGroupAdmins) return client.reply(from, 'Você precisa tornar o BOT um Admin do Grupo', id)
+                    if (args.length !== 1) return client.reply(from, 'Atenção! \nInforme on ou off', id)
+                    if (args[0] == 'on') {
+                        await client.setGroupToAdminsOnly(groupId, true).then(() => client.sendText(from, 'O grupo foi mutado, e agora apenas ADMs  podem falar.'))
+                    } else if (args[0] == 'off') {
+                        await client.setGroupToAdminsOnly(groupId, false).then(() => client.sendText(from, 'O grupo foi desmutado, e agora todos  podem falar.'))
+                    } else return client.reply(from, 'Só funciona se usar on ou off.', id)
+                    break
             case 'add':
                 if (!isGroupMsg) return client.reply(from, 'Esse comando foi feito para funcionar apenas em Grupos!', id)
                 if (!isGroupAdmins) return client.reply(from, 'Esse comando só pode ser usado por Admins do Grupo.', id)
@@ -1246,12 +1302,14 @@ module.exports = msgHandler = async (client, message) => {
                 if (args.length == 0) return client.reply(from, `Utilize:\n${prefix}tagall [mensagem]`)
                 if (!isGroupMsg) return client.reply(from, 'Comando somente para ser usado em Grupos!', id)
                 if (!isGroupAdmins) return client.reply(from, 'Esse comando só pode ser usado por Admins do Grupo.', id)
-                let hehex = `${body.slice(8)} \n\n`
-                const groupMem = await client.getGroupMembers(groupId)
-                for (let i = 0; i < groupMem.length; i++) {
-                    hehex += ` @${groupMem[i].id.replace(/@c.us/g, '')},`
-                }
-                await client.sendTextWithMentions(from, hehex)
+                    let hehe = `@${sender.id}, escreveu:\n ${q}\n\n`
+                    const groupMem = await client.getGroupMembers(groupId)
+                    for (let i = 0; i < groupMem.length; i++) {
+                        hehe += ` *-* @${groupMem[i].id.replace(/@c.us/g, '')}\n`
+                        }
+                    hehe += '\n*[ENVIADO PELA ISIS BOT]*'
+                    await sleep(2000)
+                    await client.sendTextWithMentions(from, hehe)
                 break
             case 'antilink':
                 if (!isGroupMsg) return client.reply(from, 'Esse comando foi feito para funcionar apenas em Grupos!', id)
