@@ -713,9 +713,9 @@ module.exports = msgHandler = async (client, message) => {
                     })
                 break
                 case 'ip':
-                    if (args.length !== 1) return client.reply(from, 'Informe um IPV4 (ex: #ip 8.8.8.8).', id)
+                    if (args.length !== 1) return client.reply(from, '[🤷🏽‍♀️] Informe um IPV4 (ex: #ip 8.8.8.8).', id)
                     const ip = await axios.get(`http://ipwhois.app/json/${encodeURIComponent(body.slice(4))}`)
-                    if (ip.data.latitude == undefined) return client.reply(from, 'Nenhum informação localizada.', id)
+                    if (ip.data.latitude == undefined) return client.reply(from, '[🙍🏽‍♀️] Nenhum informação localizada.', id)
                     await client.reply(from,  `*[Dados do IP]*\n *IP:* ${ip.data.ip}\n *Tipo:* ${ip.data.type}\n *Região:* ${ip.data.region}\n *Cidade:* ${ip.data.city}\n *Latitude:* ${ip.data.latitude}\n *Longitude:* ${ip.data.longitude}\n *Provedor:* ${ip.data.isp}\n *Continente:* ${ip.data.continent}\n *Sigla do continente:* ${ip.data.continent_code}\n *País:* ${ip.data.country}\n *Sigla do País:* ${ip.data.country_code}\n *Capital do País:* ${ip.data.country_capital}\n *DDI:* ${ip.data.country_phone}\n *Países Vizinhos:* ${ip.data.country_neighbours}\n *Fuso Horário:* ${ip.data.timezone} ${ip.data.timezone_name} ${ip.data.timezone_gmt}\n *Moeda:* ${ip.data.currency}\n *Sigla da Moeda:* ${ip.data.currency_code}\n`, id)
                     await client.reply(from, 'Buscando o local no Google Maps. \nAguarde +/- 5seg...', id)
                     const browserip = await puppeteer.launch({ 

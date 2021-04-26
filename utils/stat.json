@@ -1,6 +1,6 @@
 {
 	"sent": {
-		"chat": 13409,
+		"chat": 13410,
 		"e2e_notification": 1426,
 		"sticker": 8079,
 		"gp2": 3675,
@@ -14,11 +14,11 @@
 		"location": 7
 	},
 	"receive": {
-		"chat": 112107,
-		"sticker": 21034,
+		"chat": 112119,
+		"sticker": 21035,
 		"image": 8533,
 		"ptt": 11959,
-		"video": 5119,
+		"video": 5120,
 		"ciphertext": 277,
 		"audio": 397,
 		"groups_v4_invite": 40,
