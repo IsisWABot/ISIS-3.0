@@ -11,6 +11,7 @@ const canvas = require('canvacord')
 const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
 moment.tz.setDefault('Brasil/São Paulo').locale('br')
+const puppeteer = require('puppeteer')
 const {
     exec
 } = require('child_process')
@@ -45,6 +46,8 @@ const {
 let antilink = JSON.parse(fs.readFileSync('C:/BOTS/ISIS-3.0/handler/message/text/antilink.json'))
 const ownerNumber = '5517991766836@c.us';
 const groupLimit = 10;
+
+const sleep = async (ms) => { return new Promise(resolve => setTimeout(resolve, ms)) }
 
 module.exports = msgHandler = async (client, message) => {
     try {
@@ -83,6 +86,7 @@ module.exports = msgHandler = async (client, message) => {
         const isGroupAdmins = groupAdmins.includes(sender.id) || false
         const isBotGroupAdmins = groupAdmins.includes(botNumber) || false
         const isOwner = ownerNumber == sender.id
+        const user = sender.id
         const GroupLinkDetector = antilink.includes(chatId)
 
 
@@ -708,6 +712,27 @@ module.exports = msgHandler = async (client, message) => {
                         client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro!', id)
                     })
                 break
+                case 'ip':
+                    if (args.length !== 1) return client.reply(from, 'Informe um IPV4 (ex: #ip 8.8.8.8).', id)
+                    const ip = await axios.get(`http://ipwhois.app/json/${encodeURIComponent(body.slice(4))}`)
+                    if (ip.data.latitude == undefined) return client.reply(from, 'Nenhum informação localizada.', id)
+                    await client.reply(from,  `*[Dados do IP]*\n *IP:* ${ip.data.ip}\n *Tipo:* ${ip.data.type}\n *Região:* ${ip.data.region}\n *Cidade:* ${ip.data.city}\n *Latitude:* ${ip.data.latitude}\n *Longitude:* ${ip.data.longitude}\n *Provedor:* ${ip.data.isp}\n *Continente:* ${ip.data.continent}\n *Sigla do continente:* ${ip.data.continent_code}\n *País:* ${ip.data.country}\n *Sigla do País:* ${ip.data.country_code}\n *Capital do País:* ${ip.data.country_capital}\n *DDI:* ${ip.data.country_phone}\n *Países Vizinhos:* ${ip.data.country_neighbours}\n *Fuso Horário:* ${ip.data.timezone} ${ip.data.timezone_name} ${ip.data.timezone_gmt}\n *Moeda:* ${ip.data.currency}\n *Sigla da Moeda:* ${ip.data.currency_code}\n`, id)
+                    await client.reply(from, 'Buscando o local no Google Maps. \nAguarde +/- 5seg...', id)
+                    const browserip = await puppeteer.launch({ 
+                        headless: true,
+                        defaultViewport: null,
+                        args: ['--start-maximized'] 
+                    })
+                    const pageip = await browserip.newPage()
+                    await pageip.goto(`http://www.google.com/maps?layer=c&cbll=${ip.data.latitude},${ip.data.longitude}`, { waitUntil: "networkidle2" }).then(async () => {
+                        await sleep(5000)
+                        await client.sendLocation(from, `${ip.data.latitude}`, `${ip.data.longitude}`, '')
+                        await pageip.screenshot({path: `./media/img/${user.replace('@c.us', '')}ip.png`})
+                        browserip.close()
+                    })
+                    await client.sendFile(from, `./media/img/${user.replace('@c.us', '')}ip.png`, 'ip.png', `Talvez seja aqui! 📍\n *Google Maps:* http://www.google.com/maps/place/${ip.data.latitude},${ip.data.longitude}`, id)
+                    fs.unlinkSync(`./media/img/${user.replace('@c.us', '')}ip.png`)
+                    break
             case 'say':
                 if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️] Utilize:\n${prefix}say [mensagem]`)
                 if (!isGroupMsg) return client.reply(from, '[🤷🏽‍♀️] *Atenção!* \n\nEsse comando só funciona em Grupos.', id)
