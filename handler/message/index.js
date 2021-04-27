@@ -11,6 +11,7 @@ const CepCoords = require("coordenadas-do-cep");
 const canvas = require('canvacord')
 const ffmpeg = require('fluent-ffmpeg')
 const path = require('path')
+const os = require('os')
 moment.tz.setDefault('Brasil/São Paulo').locale('br')
 const puppeteer = require('puppeteer')
 const {
@@ -642,8 +643,8 @@ module.exports = msgHandler = async (client, message) => {
                         const memeupm = await decryptMedia(memeData, uaOverride)
                         const memeUpl = await uploadImages(memeupm, false)
                         await client.sendFileFromUrl(from, `https://api.memegen.link/images/custom/${top}/${bottom}.png?background=${memeUpl}`, 'image.png', '', id)
-                        .catch(() => { kill.reply(from, '[🙍🏽‍♀️] Ocorreu um erro!', id) })
-                    } else return kill.reply(from, `Isso deve ser usado digitando o comando e em seguida os argumentos, separando eles pelo |, exemplo, ${prefix}meme parte 1 | parte 2 | parte 3 e assim vai, nesse comando `, id)
+                        .catch(() => { client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro!', id) })
+                    } else return client.reply(from, `Isso deve ser usado digitando o comando e em seguida os argumentos, separando eles pelo |, exemplo, ${prefix}meme parte 1 | parte 2 | parte 3 e assim vai, nesse comando `, id)
                     break
                 //
             case 'criador':
@@ -1198,6 +1199,13 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFileFromUrl(from, `${res}`, id)
                     })
                 break
+                case 'cnpj':
+                    if (args.length == 1) {
+                        const cnpj = await axios.get(`https://www.receitaws.com.br/v1/cnpj/${encodeURIComponent(q)}`)
+                        if (cnpj.data.status == 'ERROR') return client.reply(from, cnpj.data.message, id)
+                        await client.reply(from, `*[DADOS DA EMPRESA]*\n *CNPJ:* ${cnpj.data.cnpj}\n *Tipo:* ${cnpj.data.tipo}\n *Nome:* ${cnpj.data.nome}\n *Região:* ${cnpj.data.uf}\n *Telefone:* ${cnpj.data.telefone}\n *Situação:* ${cnpj.data.situacao}\n *Bairro:* ${cnpj.data.bairro}\n *Logradouro:* ${cnpj.data.logradouro}\n *CEP:* ${cnpj.data.cep}\n *Casa N°:* ${cnpj.data.numero}\n *Municipio:* ${cnpj.data.municipio}\n *Abertura:* ${cnpj.data.abertura}\n *Fantasia:* ${cnpj.data.fantasia}\n *Jurisdição:* ${cnpj.data.natureza_juridica}\n *Capital Social:* R$${cnpj.data.capital_social}\n *Porte:* ${cnpj.data.porte}\n `, id)
+                    } else return client.reply(from, 'Especifique um CNPJ sem os traços e pontos.', id)
+                    break
                 //Grupos
                 case 'capagrupo':
                     if (!isGroupMsg) return client.reply(from, 'Esse comando foi feito para funcionar apenas em Grupos!', id)
@@ -1206,7 +1214,7 @@ module.exports = msgHandler = async (client, message) => {
                     if (isMedia && type == 'image' || isQuotedImage) {
                         const dataMedia = isQuotedImage ? quotedMsg : message
                         const mediaData = await decryptMedia(dataMedia, uaOverride)
-                        const picgp = await kill.getProfilePicFromServer(groupId)
+                        const picgp = await client.getProfilePicFromServer(groupId)
                         if (picgp == undefined) { var backup = errorurl } else { var backup = picgp }
                         await client.sendFileFromUrl(from, backup, 'group.png', 'Backup', id)
                         await client.setGroupIcon(groupId, `data:${mimetype};base64,${mediaData.toString('base64')}`)
@@ -1456,11 +1464,32 @@ module.exports = msgHandler = async (client, message) => {
                 break
             case 'stats':
             case 'status':
+                const rTime = (seconds) => {
+                    const pad = (s) => { return (s < 10 ? '0' : '') + s }
+                    var hours = Math.floor(seconds / (60*60)); var minutes = Math.floor(seconds % (60*60) / 60); var seconds = Math.floor(seconds % 60)
+                    return `${pad(hours)} horas | ${pad(minutes)} minutos | ${pad(seconds)} segundos`
+                }
+                const osUptime = () => {
+                    var up_sec = os.uptime(); var up_min = up_sec / 60; var up_hour = up_min / 60; up_sec = Math.floor(up_sec); up_min = Math.floor(up_min); up_hour = Math.floor(up_hour); up_hour = up_hour % 60; up_min = up_min % 60; up_sec = up_sec % 60
+                    return `${up_hour} horas | ${up_min} minutos | ${up_sec} segundos`
+                }
+                const ramMemory = () => {
+                    var allRam = os.totalmem()/1024/1024;
+                    var freeRam = os.freemem()/1024/1024;
+                    var usoRam = allRam - freeRam;
+                    return `Total: ${Math.floor(allRam)}MB | Em uso: ${Math.floor(usoRam)}MB | Livre: ${Math.floor(freeRam)}MB`
+                }
+
+                const waVersion = await client.getWAVersion()
+                const bateria = await client.getBatteryLevel()
+                const conectado = await client.getIsPlugged()
+                const timeBot = rTime(process.uptime())
+                const licenca = await client.getLicenseType()
+                const sessionID = await client.getSessionId()
                 const loadedMsg = await client.getAmountOfLoadedMessages()
                 const chatIds = await client.getAllChatIds()
                 const groups = await client.getAllGroups()
-                const bateria = await client.getBatteryLevel()
-                client.sendText(from, `*Atualmente eu estou com:*\n\n- *${loadedMsg}* Mensagens Carregadas\n- *${groups.length}* Grupos\n- *${chatIds.length - groups.length}* Chats Privados\n- *${chatIds.length}* Conversas\n- *${bateria}%* Bateria`)
+                await client.sendText(from, `\n*[STATUS ISIS-BOT]* \n\n *Informações do WhatsApp*\n📊 - *${loadedMsg}* Mensagens carregadas no Cache \n📱 - *${groups.length}* Conversas em grupo\n👥 - *${chatIds.length - groups.length}* Conversas no PV\n📈 - *${chatIds.length}* Total de chats\n\n *Tempo de funcionamento:*\n⌛ Uptime Bot - ${timeBot}\n💻​ Uptime Server - ${osUptime()}\n\n *Dados Hospedagem:*\n🌡️ CPU - ${os.cpus()[0].model} (${os.cpus()[0].speed} MHz)\n🖥️ S.O - ${os.type()} - ${os.arch()} (${os.platform} V. ${os.release()})\n💾 RAM - ${ramMemory()}\n👑 Hostname - ${os.hostname()}\n\n *Dados Cliente:*\n🥏 Versão WhatsApp - *${waVersion}*\n🔋 Bateria - ${bateria}%\n🔌 Carregando - ${conectado ? '*NÃO*':'*SIM*'}\n📝 Licença em Uso - ${licenca ?'*EM REGISTRO*':'*SIM*'}\n🤖 ID Sessão - ${sessionID}\n\n`)
                 break
             default:
                 console.log(color('[ERROR]', 'red'), color(moment(t * 1000).format('DD/MM/YY HH:mm:ss'), 'yellow'), 'Comando não registrado de ', color(pushname))

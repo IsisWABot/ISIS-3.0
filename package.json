@@ -46,6 +46,7 @@
     "ocr-space-api": "^1.0.1",
     "ocr-space-api-alt2": "^1.1.0",
     "ocr-space-api-wrapper": "^1.0.5",
+    "os": "^0.1.1",
     "path": "^0.12.7",
     "promise": "^8.1.0",
     "puppeteer": "^5.5.0",
