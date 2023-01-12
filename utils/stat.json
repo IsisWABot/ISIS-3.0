@@ -1,11 +1,11 @@
 {
 	"sent": {
-		"chat": 13504,
+		"chat": 13513,
 		"e2e_notification": 1445,
 		"sticker": 8102,
 		"gp2": 3789,
 		"image": 2560,
-		"vcard": 37,
+		"vcard": 38,
 		"ptt": 539,
 		"document": 40,
 		"video": 123,
@@ -14,7 +14,7 @@
 		"location": 10
 	},
 	"receive": {
-		"chat": 113009,
+		"chat": 113022,
 		"sticker": 21285,
 		"image": 8637,
 		"ptt": 11988,
@@ -25,7 +25,7 @@
 		"document": 32,
 		"vcard": 46,
 		"oversized": 112,
-		"call_log": 3,
+		"call_log": 4,
 		"multi_vcard": 1,
 		"location": 1
 	}
