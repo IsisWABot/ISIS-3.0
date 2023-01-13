@@ -45,7 +45,7 @@ const {
 const {
     menuBR
 } = require('./text') // Menu do BOT
-let antilink = JSON.parse(fs.readFileSync('C:/BOTS/ISIS-3.0/handler/message/text/antilink.json'))
+let antilink = JSON.parse(fs.readFileSync('handler/message/text/antilink.json'))
 const ownerNumber = '5517991766836@c.us';
 const groupLimit = 10;
 
@@ -1329,7 +1329,7 @@ module.exports = msgHandler = async (client, message) => {
                         return client.reply(from, '*Sistema Anti-Link* \n Esse sistema já está ativo no grupo!', id) //if number already exists on database
                     } else {
                         antilink.push(chatId)
-                        fs.writeFileSync('C:/BOTS/ISIS-3.0/handler/message/text/antilink.json', JSON.stringify(antilink))
+                        fs.writeFileSync('./antilink.json', JSON.stringify(antilink))
                         client.reply(from, '*[Sistema Anti-Link]* Foi ativado! Cada membro do grupo que enviar uma mensagem contendo um link de grupo será expulso grupo!', id)
                     }
                 } else if (args[0] == 'off') {
@@ -1339,7 +1339,7 @@ module.exports = msgHandler = async (client, message) => {
                     } else {
                         let nixx = antilink.indexOf(chatId)
                         antilink.splice(nixx, 1)
-                        fs.writeFileSync('C:/BOTS/ISIS-3.0/handler/message/text/antilink.json', JSON.stringify(antilink))
+                        fs.writeFileSync('./antilink.json', JSON.stringify(antilink))
                         client.reply(from, '*[Sistema Anti-Link]* Foi desativado, agora se receber um lnk eu não vou mais remover o usuário.\n', id)
                     }
                 } else {

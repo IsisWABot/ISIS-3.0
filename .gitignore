@@ -28,8 +28,11 @@ lib/*.json
 lib/instaStory.js
 lib/jiwa.js
 utils/stat.json
-
 # managed
 **.data.json
 **.node-persist**
+# end managed
+
+# managed
+**_IGNORE_**
 # end managed
