@@ -1199,6 +1199,17 @@ module.exports = msgHandler = async (client, message) => {
                         await client.sendFileFromUrl(from, `${res}`, id)
                     })
                 break
+                //
+                case 'chatgpt':
+                    if (args.length == 0) return client.reply(from, `Utilize:\n${prefix}chatgpt [mensagem]`)
+                    let text = body.slice(7);
+                    client.reply(from, `Aguarde um instante...`, id);
+                    chatgpt.chatgpt(text)
+                    .then(async (res) => {
+                        await client.reply(from, `${res}`, id)
+                    })
+                    break
+                //
                 case 'cnpj':
                     if (args.length == 1) {
                         const cnpj = await axios.get(`https://www.receitaws.com.br/v1/cnpj/${encodeURIComponent(q)}`)
