@@ -1210,7 +1210,7 @@ module.exports = msgHandler = async (client, message) => {
                     })
                 break
                 //
-                case 'chatgpt':
+               /* case 'chatgpt':
                     if (args.length == 0) return client.reply(from, `Utilize:\n${prefix}chatgpt [mensagem]`)
                     let text = body.slice(7);
                     client.reply(from, `Aguarde um instante...`, id);
@@ -1218,7 +1218,7 @@ module.exports = msgHandler = async (client, message) => {
                     .then(async (res) => {
                         await client.reply(from, `${res}`, id)
                     })
-                    break
+                    break */
                 //
                 case 'cnpj':
                     if (args.length == 1) {
