@@ -629,7 +629,7 @@ module.exports = msgHandler = async (client, message) => {
                     const promptx = await deepai.imagine(prompt)
                     client.sendFileFromUrl(from, promptx, '', '', id)
                         .catch(() => {
-                            client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro, nenhuma imagem localizada!', id)
+                            client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro, nenhum prompet recebido!', id)
                         })
                     break
                 //
