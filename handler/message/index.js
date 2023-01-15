@@ -223,7 +223,7 @@ module.exports = msgHandler = async (client, message) => {
                     const mediaData = await decryptMedia(message, uaOverride)
                     const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
                     await client.sendImageAsSticker(from, imageBase64, {
-                        author: '>> https://isisbot.xyz',
+                        author: 'https://igorsardinha.com.br',
                         pack: '👩🏽‍💻 Isis Bot ',
                         keepScale: true
                     })
@@ -232,14 +232,14 @@ module.exports = msgHandler = async (client, message) => {
                         const mediaData = await decryptMedia(quotedMsg, uaOverride)
                         const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
                         await client.sendImageAsSticker(from, imageBase64, {
-                            author: '>> https://isisbot.xyz',
+                            author: 'https://igorsardinha.com.br',
                             pack: '👩🏽‍💻 Isis Bot '
                         })
                     } else if (args.length === 1 && args[0] == 'circle') {
                         const mediaData = await decryptMedia(quotedMsg, uaOverride)
                         const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
                         await client.sendImageAsSticker(from, imageBase64, {
-                            author: '>> https://isisbot.xyz',
+                            author: 'https://igorsardinha.com.br',
                             pack: '👩🏽‍💻 Isis Bot ',
                             circle: true
                         })
@@ -247,7 +247,7 @@ module.exports = msgHandler = async (client, message) => {
                         const mediaData = await decryptMedia(quotedMsg, uaOverride)
                         const imageBase64 = `data:${quotedMsg.mimetype};base64,${mediaData.toString('base64')}`
                         await client.sendImageAsSticker(from, imageBase64, {
-                            author: '>> https://isisbot.xyz',
+                            author: 'https://igorsardinha.com.br',
                             pack: '👩🏽‍💻 Isis Bot ',
                             keepScale: true
                         })
@@ -256,14 +256,14 @@ module.exports = msgHandler = async (client, message) => {
                     const mediaData = await decryptMedia(message, uaOverride)
                     const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
                     await client.sendImageAsSticker(from, imageBase64, {
-                        author: '>> https://isisbot.xyz',
+                        author: 'https://igorsardinha.com.br',
                         pack: '👩🏽‍💻 Isis Bot '
                     })
                 } else if (args.length === 1 && args[0] == 'circle') {
                     const mediaData = await decryptMedia(message, uaOverride)
                     const imageBase64 = `data:${mimetype};base64,${mediaData.toString('base64')}`
                     await client.sendImageAsSticker(from, imageBase64, {
-                        author: '>> https://isisbot.xyz',
+                        author: 'https://igorsardinha.com.br',
                         pack: '👩🏽‍💻 Isis Bot ',
                         circle: true
                     })
@@ -285,9 +285,9 @@ module.exports = msgHandler = async (client, message) => {
                     const mediaData = await decryptMedia(encryptMedia, uaOverride)
                     await client.sendMp4AsSticker(from, mediaData, null, {
                             stickerMetadata: true,
-                            author: '>> https://isisbot.xyz',
+                            author: 'https://igorsardinha.com.br',
                             pack: '👩🏽‍💻 Isis Bot ',
-                            fps: 10,
+                            fps: 24,
                             startTime: '00:00:00.0',
                             endTime: '00:00:05.0',
                             crop: false,
@@ -350,7 +350,7 @@ module.exports = msgHandler = async (client, message) => {
                         })
                         await fs.writeFile(outFile, result.base64img)
                         await client.sendImageAsSticker(from, `data:${mimetype};base64,${result.base64img}`, {
-                            author: '>> https://isisbot.xyz',
+                            author: 'https://igorsardinha.com.br',
                             pack: '👩🏽‍💻 Isis Bot ',
                             keepScale: true
                         })
@@ -371,7 +371,7 @@ module.exports = msgHandler = async (client, message) => {
                 await client.reply(from, '[👩🏽‍💻] Paraê... Eu preciso pensar um pouco para fazer isso...', id)
                 const ttpst = await axios.get(`https://st4rz.herokuapp.com/api/ttp?kata=${encodeURIComponent(q)}`)
                 await client.sendImageAsSticker(from, ttpst.data.result, {
-                    author: '>> https://isisbot.xyz',
+                    author: 'https://igorsardinha.com.br',
                     pack: '👩🏽‍💻 Isis Bot ',
                     keepScale: true
                 })
@@ -387,7 +387,7 @@ module.exports = msgHandler = async (client, message) => {
                 }).then(async (response) => {
                     const attp = Buffer.from(response.data, 'binary').toString('base64')
                     await client.sendImageAsSticker(from, attp, {
-                        author: '>> https://isisbot.xyz',
+                        author: 'https://igorsardinha.com.br',
                         pack: '👩🏽‍💻 Isis Bot ',
                         keepScale: true
                     })
@@ -404,7 +404,7 @@ module.exports = msgHandler = async (client, message) => {
                     const wastedUpl = await uploadImages(wstddt, false)
                     const wastedurl = `https://some-random-api.ml/canvas/wasted?avatar=${wastedUpl}`
                     await client.sendImageAsSticker(from, wastedurl, {
-                            author: '>> https://isisbot.xyz',
+                            author: 'https://igorsardinha.com.br',
                             pack: '👩🏽‍💻 Isis Bot ',
                             keepScale: true
                         })
@@ -422,7 +422,7 @@ module.exports = msgHandler = async (client, message) => {
                 await client.sendStickerfromUrl(from, stkfm, {
                     method: 'get'
                 }, {
-                    author: '>> https://isisbot.xyz',
+                    author: 'https://igorsardinha.com.br',
                     pack: '👩🏽‍💻 Isis Bot ',
                     keepScale: true
                 })
@@ -622,6 +622,16 @@ module.exports = msgHandler = async (client, message) => {
                         client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro, nenhuma imagem localizada!', id)
                     })
                 break
+                //
+                case 'imagine':
+                    if (args.length == 0) return client.reply(from, `[🤷🏽‍♀️] Crie imagens usando inteligencia artifical: \n *${prefix}imagine [prompt]*\n`, id)
+                    const prompt = body.slice(10)
+                    const promptx = await deepai.imagine(prompt)
+                    client.sendFileFromUrl(from, promptx, '', '', id)
+                        .catch(() => {
+                            client.reply(from, '[🙍🏽‍♀️] Ocorreu um erro, nenhum prompet recebido!', id)
+                        })
+                    break
                 //
             case 'upimg':
             case 'uparimagem':

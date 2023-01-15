@@ -3,8 +3,10 @@ node_modules
 .node-persist
 .idea
 db
+media
 # Dot files
 .idea
+.env
 .node-persist
 # Log files
 *.log
